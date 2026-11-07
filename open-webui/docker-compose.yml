@@ -1,0 +1,19 @@
+# Open WebUI: a ChatGPT-style web interface for the local Ollama server.
+# Ollama runs natively on Windows (for GPU access); this container reaches it
+# through host.docker.internal.
+services:
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:main
+    container_name: open-webui
+    ports:
+      - "127.0.0.1:3000:8080"   # localhost only: not reachable from other devices
+    environment:
+      - OLLAMA_BASE_URL=http://host.docker.internal:11434
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - open-webui-data:/app/backend/data   # chats, settings, accounts persist here
+    restart: unless-stopped
+
+volumes:
+  open-webui-data:

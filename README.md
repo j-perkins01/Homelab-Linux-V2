@@ -19,7 +19,7 @@ A hands-on lab on my Windows 11 PC for building Linux, container and AI skills: 
 - [x] Configure Git and SSH key authentication to GitHub
 - [x] Docker Desktop with the WSL2 backend
 - [x] Ollama running a local 8B model on the GPU
-- [ ] Open WebUI in Docker, connected to Ollama
+- [x] Open WebUI in Docker, connected to Ollama
 - [ ] Uptime Kuma monitoring the services
 
 ## Setup Log
@@ -107,6 +107,30 @@ Invoke-RestMethod http://localhost:11434/api/generate -Method Post `
   -Body (@{model="llama3.1:8b"; prompt="What is AWS Lambda?"; stream=$false} | ConvertTo-Json)
 ```
 
+### 5. Open WebUI in Docker
+
+A ChatGPT-style web interface for the local model, defined in [`open-webui/docker-compose.yml`](open-webui/docker-compose.yml).
+
+```bash
+cd open-webui
+docker compose up -d
+curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:3000/health   # 200
+```
+
+Then open `http://localhost:3000` and create the first account (it becomes the admin; accounts are stored locally in the container volume).
+
+**Design decisions:**
+
+- **Ollama stays on Windows, the UI runs in a container.** Windows 11 Home has no GPU passthrough to VMs, so running Ollama natively is the reliable way to use the GPU. The container reaches it at `http://host.docker.internal:11434`.
+- **Bound to `127.0.0.1` only.** The port mapping `127.0.0.1:3000:8080` means only this PC can open the UI, not other devices on the network.
+- **Named volume for data.** Chats and settings live in the `open-webui-data` volume, so they survive container updates and restarts.
+
+Verified the container can reach Ollama:
+
+```bash
+docker exec open-webui curl -s http://host.docker.internal:11434/api/tags   # lists llama3.1:8b
+```
+
 ## What I'm Learning
 
 - How WSL2 runs a real Linux kernel in a lightweight VM managed by Windows
@@ -114,3 +138,4 @@ Invoke-RestMethod http://localhost:11434/api/generate -Method Post `
 - Keeping secrets out of public repositories
 - What containers are and why they are used instead of installing apps directly
 - How model size relates to GPU memory (VRAM), and how to check where a model is running
+- How a container talks to a service on the host (`host.docker.internal`), and why binding ports to localhost matters
