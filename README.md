@@ -18,7 +18,7 @@ A hands-on lab on my Windows 11 PC for building Linux, container and AI skills: 
 - [x] Update Ubuntu packages
 - [x] Configure Git and SSH key authentication to GitHub
 - [x] Docker Desktop with the WSL2 backend
-- [ ] Ollama running a local 8B model on the GPU
+- [x] Ollama running a local 8B model on the GPU
 - [ ] Open WebUI in Docker, connected to Ollama
 - [ ] Uptime Kuma monitoring the services
 
@@ -74,9 +74,43 @@ docker run --rm hello-world  # "Hello from Docker!"
 
 Docker runs its engine inside WSL2, so containers get the full CPU (16 threads) and about half the system RAM by default.
 
+### 4. Ollama: local AI on the GPU
+
+Installed Ollama natively on Windows (simplest path to the NVIDIA GPU) and pulled an 8B model:
+
+```powershell
+winget install --id Ollama.Ollama -e
+ollama pull llama3.1:8b      # 4.9 GB download
+ollama run llama3.1:8b
+```
+
+Ollama serves a local API on `http://localhost:11434`, which other tools (like Open WebUI) can call.
+
+**Verifying it uses the GPU, not the CPU:**
+
+```text
+> ollama ps
+NAME          SIZE     PROCESSOR   CONTEXT
+llama3.1:8b   5.3 GB   100% GPU    4096
+
+> nvidia-smi --query-gpu=memory.used,memory.total,utilization.gpu --format=csv
+7311 MiB, 8151 MiB, 95 %
+```
+
+Result: about **30 tokens/second** on the RTX 5060, fully offloaded to the GPU. The model plus context uses about 7.3 of 8 GB VRAM, so 8B is the practical size limit for this card.
+
+Test prompt sent to the API:
+
+```powershell
+Invoke-RestMethod http://localhost:11434/api/generate -Method Post `
+  -ContentType application/json `
+  -Body (@{model="llama3.1:8b"; prompt="What is AWS Lambda?"; stream=$false} | ConvertTo-Json)
+```
+
 ## What I'm Learning
 
 - How WSL2 runs a real Linux kernel in a lightweight VM managed by Windows
 - SSH key authentication versus passwords
 - Keeping secrets out of public repositories
 - What containers are and why they are used instead of installing apps directly
+- How model size relates to GPU memory (VRAM), and how to check where a model is running
