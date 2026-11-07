@@ -131,6 +131,24 @@ Verified the container can reach Ollama:
 docker exec open-webui curl -s http://host.docker.internal:11434/api/tags   # lists llama3.1:8b
 ```
 
+### Troubleshooting: model replied with JSON instead of answers
+
+**Symptom:** In Open WebUI, prompts like *"Quiz me with 5 multiple-choice questions..."* returned raw JSON such as
+`{"type":"function","name":"create_tasks","parameters":{...}}` instead of an answer. It kept happening on every new message in the same chat.
+
+**Investigation:**
+
+1. Sent the exact same prompt **directly to the Ollama API**, bypassing Open WebUI. The model answered correctly (a proper multiple-choice question). So the model was fine and the problem was in the app layer.
+2. The `create_tasks` name pointed to Open WebUI offering the model built-in tools. Small models (8B) often handle tool/function calling poorly and emit a malformed tool call instead of text.
+3. Once a broken reply was in the chat history, the model kept copying the same pattern.
+
+**Fix:**
+
+- Admin Panel > Settings > Models > llama3.1:8b: set **Function Calling** to *Default* (not *Native*) and turned off built-in tools.
+- Started a **new chat** to clear the bad history.
+
+**Lesson:** The app around a model matters as much as the model. The same model gave a good answer or garbage depending only on what the app sent it. Testing each layer separately (UI vs. API) isolated the problem quickly.
+
 ## What I'm Learning
 
 - How WSL2 runs a real Linux kernel in a lightweight VM managed by Windows
@@ -138,4 +156,5 @@ docker exec open-webui curl -s http://host.docker.internal:11434/api/tags   # li
 - Keeping secrets out of public repositories
 - What containers are and why they are used instead of installing apps directly
 - How model size relates to GPU memory (VRAM), and how to check where a model is running
+- Isolating a problem by testing each layer separately (UI vs. API)
 - How a container talks to a service on the host (`host.docker.internal`), and why binding ports to localhost matters
