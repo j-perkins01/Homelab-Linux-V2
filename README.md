@@ -1,8 +1,6 @@
 # Home Lab V2: WSL2, Containers and Local AI
 
-The second version of my home lab. [Version 1](https://github.com/j-perkins01/homelab) covered Linux server administration in a VirtualBox VM (SSH hardening, UFW, Nginx with TLS, monitoring, backups, and Docker with GitHub Actions).
-
-V2 builds on that with a Linux workstation in WSL2, container tooling, and a self-hosted AI stack running on my own GPU. It also prepares for a cloud project on AWS.
+A hands-on lab on my Windows 11 PC for building Linux, container and AI skills: a Linux environment in WSL2, container tooling, and a self-hosted AI stack running on my own GPU. It also prepares for a cloud project on AWS.
 
 ## Lab Environment
 
