@@ -1,0 +1,35 @@
+# --- Secrets: never commit these ---
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+id_rsa*
+id_ed25519*
+*.ppk
+credentials
+.aws/
+*secret*
+*password*
+terraform.tfvars
+*.tfstate
+*.tfstate.*
+.terraform/
+
+# --- Large / local-only files ---
+*.gguf
+*.safetensors
+models/
+*.vmdk
+*.vmx
+*.iso
+*.log
+
+# --- OS / editor junk ---
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+*.swp
