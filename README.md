@@ -20,7 +20,7 @@ A hands-on lab on my Windows 11 PC for building Linux, container and AI skills: 
 - [x] Docker Desktop with the WSL2 backend
 - [x] Ollama running a local 8B model on the GPU
 - [x] Open WebUI in Docker, connected to Ollama
-- [ ] Uptime Kuma monitoring the services
+- [x] Uptime Kuma monitoring the services
 
 ## Setup Log
 
@@ -131,6 +131,29 @@ Verified the container can reach Ollama:
 docker exec open-webui curl -s http://host.docker.internal:11434/api/tags   # lists llama3.1:8b
 ```
 
+### 6. Uptime Kuma: monitoring
+
+A self-hosted monitoring dashboard, defined in [`uptime-kuma/docker-compose.yml`](uptime-kuma/docker-compose.yml) and bound to `127.0.0.1:3001`.
+
+```bash
+cd uptime-kuma
+docker compose up -d
+```
+
+Verified the container can reach both services before adding monitors:
+
+```bash
+docker exec uptime-kuma curl -s -o /dev/null -w "%{http_code}" http://host.docker.internal:11434          # 200 (Ollama)
+docker exec uptime-kuma curl -s -o /dev/null -w "%{http_code}" http://host.docker.internal:3000/health     # 200 (Open WebUI)
+```
+
+| Monitor | Type | URL | Interval |
+|---|---|---|---|
+| Ollama API | HTTP(s) | `http://host.docker.internal:11434` | 60s |
+| Open WebUI | HTTP(s) | `http://host.docker.internal:3000/health` | 60s |
+
+Note: monitors use `host.docker.internal`, not `localhost`, because inside a container `localhost` means the container itself.
+
 ### Troubleshooting: model replied with JSON instead of answers
 
 **Symptom:** In Open WebUI, prompts like *"Quiz me with 5 multiple-choice questions..."* returned raw JSON such as
@@ -156,5 +179,6 @@ docker exec open-webui curl -s http://host.docker.internal:11434/api/tags   # li
 - Keeping secrets out of public repositories
 - What containers are and why they are used instead of installing apps directly
 - How model size relates to GPU memory (VRAM), and how to check where a model is running
+- Health checks and monitoring: knowing a service is down before a user reports it
 - Isolating a problem by testing each layer separately (UI vs. API)
 - How a container talks to a service on the host (`host.docker.internal`), and why binding ports to localhost matters
